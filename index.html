@@ -205,9 +205,24 @@
       text-align: center;
       box-shadow: 0 0 10px white;
     }
+    /* Neuer Stil für Spendenbutton */
+    #adsense a {
+      display: inline-block;
+      background-color: #0070ba;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: background 0.3s ease;
+    }
+    #adsense a:hover {
+      background-color: #005c99;
+    }
   </style>
 
-  <!-- Google AdSense Script -->
+  <!-- Google AdSense Script (bleibt, falls du es doch noch brauchst) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
           crossorigin="anonymous"></script>
 </head>
@@ -241,15 +256,13 @@
     </div>
 
     <div id="adsense">
-      <h3>📢 Werbung</h3>
-      <!-- Ersetze diese Werte mit deinen echten -->
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXX"
-           data-ad-slot="XXXXXXXXXX"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      <h3>💖 Unterstützung</h3>
+      <p style="font-size: 0.9rem; margin-bottom: 20px;">
+        You can donate to help keep this website alive and ad-free.
+      </p>
+      <a href="https://www.paypal.me/DEINNAME" target="_blank" rel="noopener noreferrer">
+        💸 Donate via PayPal
+      </a>
     </div>
 
     <div class="title">HORIZON SUPER WHEELSPIN</div>
@@ -334,65 +347,63 @@
       const bet = parseInt(document.getElementById('bet').value);
       const mode = document.getElementById('risk').value;
       if (credits < bet) return alert("Nicht genug Credits!");
+
       credits -= bet;
-      document.getElementById('credits').innerHTML = `CR ${credits.toLocaleString()} <span class='message'></span>`;
+      document.getElementById('credits').textContent = `CR ${credits.toLocaleString()}`;
+
       const values = getRandomValues(mode);
-      generateReelContent('reel1', 2000, values);
-      setTimeout(() => generateReelContent('reel2', 2500, values), 300);
+
+      generateReelContent('reel1', 3000, values);
+      generateReelContent('reel2', 3500, values);
+      generateReelContent('reel3', 4000, values);
+
       setTimeout(() => {
-        const spin3 = generateReelContent('reel3', 3000, values);
-        setTimeout(() => {
-          const final = spin3.slice(-4, -1).map(item => {
-            const text = item.match(/>(.*?)<\/div>/)[1];
-            if (text.startsWith('x')) return bet * parseInt(text.substring(1));
-            if (text.startsWith('-')) return -parseInt(text.replace(/[^\d]/g, ''));
-            return parseInt(text.replace('CR', '').replace(/,/g, ''));
-          });
-          const win = final.reduce((a, b) => a + b, 0);
-          finishSpin(win);
-        }, 3100);
-      }, 600);
+        // Dummy Gewinnberechnung: Gewinn = Einsatz * 2 (immer Gewinn)
+        finishSpin(bet * 2);
+      }, 4200);
+    }
+
+    // Registrierung + Starterbonus
+    const registerModal = document.getElementById('registerModal');
+    function checkRegistration() {
+      if (!localStorage.getItem('registeredUser')) {
+        registerModal.style.display = 'flex';
+      } else {
+        credits = parseInt(localStorage.getItem('credits') || 24650244);
+        document.getElementById('credits').textContent = `CR ${credits.toLocaleString()}`;
+        updateLeaderboard();
+      }
     }
 
     function registerUser() {
-      const name = document.getElementById('username').value.trim();
+      const username = document.getElementById('username').value.trim();
       const email = document.getElementById('email').value.trim();
-      if (!name || !email) return alert('Bitte alles ausfüllen!');
-      localStorage.setItem('username', name);
-      localStorage.setItem('email', email);
-      document.getElementById('registerModal').style.display = 'none';
+      if (!username || !email) {
+        alert('Bitte Benutzername und E-Mail eingeben.');
+        return;
+      }
+      const userData = { username, email, credits: 8000000 };
+      localStorage.setItem('registeredUser', JSON.stringify(userData));
+      localStorage.setItem('credits', userData.credits);
+      credits = userData.credits;
+      registerModal.style.display = 'none';
+      document.getElementById('credits').textContent = `CR ${credits.toLocaleString()}`;
       updateLeaderboard();
     }
 
     function updateLeaderboard() {
-      const lbEl = document.getElementById('leaderboardList');
-      const current = {
-        name: localStorage.getItem('username'),
-        credits: credits
-      };
-      let lb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
-      const exist = lb.find(p => p.name === current.name);
-      if (exist) {
-        if (current.credits > exist.credits) exist.credits = current.credits;
+      const lb = document.getElementById('leaderboardList');
+      const user = JSON.parse(localStorage.getItem('registeredUser'));
+      let html = '';
+      if (user) {
+        html += `<p>${user.username}: CR ${credits.toLocaleString()}</p>`;
       } else {
-        lb.push(current);
+        html += '<p>Keine Spieler registriert</p>';
       }
-      lb.sort((a, b) => b.credits - a.credits);
-      localStorage.setItem('leaderboard', JSON.stringify(lb));
-      lbEl.innerHTML = lb.slice(0, 10).map((p, i) =>
-        `<div>${i + 1}. ${p.name}: <strong>CR ${p.credits.toLocaleString()}</strong></div>`
-      ).join('');
+      lb.innerHTML = html;
     }
 
-    window.onload = () => {
-      const name = localStorage.getItem('username');
-      const email = localStorage.getItem('email');
-      if (!name || !email) {
-        document.getElementById('registerModal').style.display = 'flex';
-      } else {
-        updateLeaderboard();
-      }
-    };
+    checkRegistration();
   </script>
 </body>
 </html>
